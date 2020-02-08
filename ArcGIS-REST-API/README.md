@@ -51,6 +51,8 @@ Example the code in the `index.js` file to understand how the demo is set up and
 
 ## Resources
 
+Links to many of the dependencies used in these demos:
+
 * [ArcGIS for Developers](https://developers.arcgis.com)
 * [ArcGIS REST API](https://developers.arcgis.com/rest/)
 * [ArcGIS REST JS](https://esri.github.io/arcgis-rest-js/)

@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Starter map app</string>
+    <string name="location_permission_denied">User denied permission for device location.</string>
+    <string name="esri_geocoder_service">http://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer</string>
+    <string name="arcgis_portal">http://www.arcgis.com</string>
+    <string name="custom_basemap">f8273a55677f45fb86c352ef607124c5</string>
+    <string name="brewery_layer">8b9b5259d40d42199c3a5f9bf2b20c6c</string>
+</resources>
