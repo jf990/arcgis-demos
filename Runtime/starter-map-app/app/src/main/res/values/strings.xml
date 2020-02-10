@@ -5,4 +5,5 @@
     <string name="arcgis_portal">http://www.arcgis.com</string>
     <string name="custom_basemap">f8273a55677f45fb86c352ef607124c5</string>
     <string name="brewery_layer">8b9b5259d40d42199c3a5f9bf2b20c6c</string>
+    <string name="bike_trail_layer">https://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_DATA/Transportation_WebMercator/MapServer/4</string>
 </resources>

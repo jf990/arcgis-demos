@@ -26,6 +26,7 @@ import android.widget.Toast;
 
 import com.esri.arcgisruntime.ArcGISRuntimeEnvironment;
 import com.esri.arcgisruntime.concurrent.ListenableFuture;
+import com.esri.arcgisruntime.data.ServiceFeatureTable;
 import com.esri.arcgisruntime.geometry.Point;
 import com.esri.arcgisruntime.layers.ArcGISVectorTiledLayer;
 import com.esri.arcgisruntime.layers.FeatureLayer;
@@ -68,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mMapView = findViewById(R.id.mapView);
         setupMap();
-        // trackLocationOn();
+        trackLocationOn();
     }
 
     // Create a map and assign it to the map view
@@ -76,11 +77,8 @@ public class MainActivity extends AppCompatActivity {
 
         // License the app with your Runtime Lite license key (set in app_settings.xml)
         ArcGISRuntimeEnvironment.setLicense(getResources().getString(R.string.arcgis_license_key));
+
         if (mMapView != null) {
-            Basemap.Type basemapType = Basemap.Type.STREETS_VECTOR;
-            double latitude = 38.902970048906099;
-            double longitude = -77.023439974464736;
-            double scale = 10000;
 
             // Connect to ArcGIS Online and get the custom basemap
             mPortalService = new Portal(getResources().getString(R.string.arcgis_portal), false);
@@ -89,8 +87,14 @@ public class MainActivity extends AppCompatActivity {
             ArcGISMap map = new ArcGISMap(new Basemap(myCustomTileLayer));
 
             // set the initial map view. this is only a fall back when location tracking is off or not enabled.
+            double latitude = 38.902970048906099;
+            double longitude = -77.023439974464736;
+            double scale = 10000;
             map.setInitialViewpoint(new Viewpoint(latitude, longitude, scale));
             mMapView.setMap(map);
+
+            // add data layers to the map
+            setupBikeTrailLayer(map);
             setupBreweryLayer(map);
 
             // when the map viewpoint changes, rerun the place search to find new places at the new map location
@@ -118,34 +122,11 @@ public class MainActivity extends AppCompatActivity {
         breweryLayer.loadAsync();
     }
 
-    // Setup the ability to do place search
-    private void setupLocatorService() {
-        if (mLocator == null) {
-            mLocator = new LocatorTask(getResources().getString(R.string.esri_geocoder_service));
-        }
-    }
-
-    // Setup the ability to track the device location
-    private void setupLocationDisplay() {
-        mLocationDisplay = mMapView.getLocationDisplay();
-        mLocationDisplay.addDataSourceStatusChangedListener(dataSourceStatusChangedEvent -> {
-            if (dataSourceStatusChangedEvent.isStarted() || dataSourceStatusChangedEvent.getError() == null) {
-                return;
-            }
-
-            int requestPermissionsCode = 2;
-            String[] requestPermissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
-
-            if (!(ContextCompat.checkSelfPermission(MainActivity.this, requestPermissions[0]) == PackageManager.PERMISSION_GRANTED
-                    && ContextCompat.checkSelfPermission(MainActivity.this, requestPermissions[1]) == PackageManager.PERMISSION_GRANTED)) {
-                ActivityCompat.requestPermissions(MainActivity.this, requestPermissions, requestPermissionsCode);
-            } else {
-                String message = String.format("Error in DataSourceStatusChangedListener: %s",
-                        dataSourceStatusChangedEvent.getSource().getLocationDataSource().getError().getMessage());
-                Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
-            }
-        });
-        mLocationDisplay.setAutoPanMode(LocationDisplay.AutoPanMode.COMPASS_NAVIGATION);
+    private void setupBikeTrailLayer(final ArcGISMap map) {
+        ServiceFeatureTable serviceFeatureTable = new ServiceFeatureTable(getResources().getString(R.string.bike_trail_layer));
+        FeatureLayer featureLayer = new FeatureLayer(serviceFeatureTable);
+        map.getOperationalLayers().add(featureLayer);
+        featureLayer.loadAsync();
     }
 
     // When the map changes view either pan or zoom perform a new place search with the updated location
@@ -158,20 +139,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // Turn on location display to track the device location on the map
-    public void trackLocationOn() {
-        if (mLocationDisplay == null) {
-            setupLocationDisplay();
-        }
-        if (mLocationDisplay != null && ! mLocationDisplay.isStarted()) {
-            mLocationDisplay.startAsync();
-        }
-    }
-
-    // Turn off location display to conserve battery
-    public void trackLocationOff() {
-        if (mLocationDisplay != null && mLocationDisplay.isStarted()) {
-            mLocationDisplay.stop();
+    // Setup the ability to do place search
+    private void setupLocatorService() {
+        if (mLocator == null) {
+            mLocator = new LocatorTask(getResources().getString(R.string.esri_geocoder_service));
         }
     }
 
@@ -262,12 +233,58 @@ public class MainActivity extends AppCompatActivity {
     private void showCalloutAtLocation(Graphic graphic, Point mapPoint) {
         Callout callout = mMapView.getCallout();
         TextView calloutContent = new TextView(getApplicationContext());
+        String placeName = graphic.getAttributes().get("PlaceName").toString();
+        String address = graphic.getAttributes().get("Place_addr").toString();
+        String url = graphic.getAttributes().get("URL").toString();
 
+        if (url.length() > 0) {
+            placeName = "<a href=\"" + url + "\">" +placeName + " </a>";
+        }
         callout.setLocation(graphic.computeCalloutLocation(mapPoint, mMapView));
         calloutContent.setTextColor(Color.BLACK);
-        calloutContent.setText(Html.fromHtml("<b>" + graphic.getAttributes().get("PlaceName").toString() + "</b><br>" + graphic.getAttributes().get("Place_addr").toString()));
+        calloutContent.setText(Html.fromHtml("<b>" + placeName + "</b><br>" + address));
         callout.setContent(calloutContent);
         callout.show();
+    }
+
+    // Setup the ability to track the device location
+    private void setupLocationDisplay() {
+        mLocationDisplay = mMapView.getLocationDisplay();
+        mLocationDisplay.addDataSourceStatusChangedListener(dataSourceStatusChangedEvent -> {
+            if (dataSourceStatusChangedEvent.isStarted() || dataSourceStatusChangedEvent.getError() == null) {
+                return;
+            }
+
+            int requestPermissionsCode = 2;
+            String[] requestPermissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
+
+            if (!(ContextCompat.checkSelfPermission(MainActivity.this, requestPermissions[0]) == PackageManager.PERMISSION_GRANTED
+                    && ContextCompat.checkSelfPermission(MainActivity.this, requestPermissions[1]) == PackageManager.PERMISSION_GRANTED)) {
+                ActivityCompat.requestPermissions(MainActivity.this, requestPermissions, requestPermissionsCode);
+            } else {
+                String message = String.format("Error in DataSourceStatusChangedListener: %s",
+                        dataSourceStatusChangedEvent.getSource().getLocationDataSource().getError().getMessage());
+                Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
+            }
+        });
+        mLocationDisplay.setAutoPanMode(LocationDisplay.AutoPanMode.COMPASS_NAVIGATION);
+    }
+
+    // Turn on location display to track the device location on the map
+    public void trackLocationOn() {
+        if (mLocationDisplay == null) {
+            setupLocationDisplay();
+        }
+        if (mLocationDisplay != null && ! mLocationDisplay.isStarted()) {
+            mLocationDisplay.startAsync();
+        }
+    }
+
+    // Turn off location display to conserve battery
+    public void trackLocationOff() {
+        if (mLocationDisplay != null && mLocationDisplay.isStarted()) {
+            mLocationDisplay.stop();
+        }
     }
 
     @Override
