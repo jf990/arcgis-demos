@@ -126,6 +126,7 @@ function getDirections(stops) {
     const summary = response.directions[0].summary;
     const features = response.directions[0].features;
     console.log(JSON.stringify(summary));
+    console.log(features);
     console.log(features.length + " direction steps");
     for (let i = 0; i < features.length; i ++) {
       let step = features[i];
@@ -145,7 +146,7 @@ if (commandLineParameter != "") {
 }
 
 // Get directions with the default start and end stops.
-// getDirections(null);
+getDirections(null);
 
 // Find places with the default search.
 // findPlaces("", null);
