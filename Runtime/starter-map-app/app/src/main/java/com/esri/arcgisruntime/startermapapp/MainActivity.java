@@ -80,8 +80,13 @@ public class MainActivity extends AppCompatActivity {
 
         if (mMapView != null) {
 
-            // Connect to ArcGIS Online and get the custom basemap
+            // Use a standard Esri basemap
+//            Basemap basemap = Basemap.createNavigationVector();
+//            ArcGISMap map = new ArcGISMap(basemap);
+
             mPortalService = new Portal(getResources().getString(R.string.arcgis_portal), false);
+
+            // Connect to ArcGIS Online and get the custom basemap
             PortalItem portalItemLayer = new PortalItem(mPortalService, getResources().getString(R.string.custom_basemap));
             ArcGISVectorTiledLayer myCustomTileLayer = new ArcGISVectorTiledLayer(portalItemLayer);
             ArcGISMap map = new ArcGISMap(new Basemap(myCustomTileLayer));
@@ -114,19 +119,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Connect to the brewery layer on ArcGIS Online and load it
+    // Connect to the brewery layer on ArcGIS Online and add it to the operational layers
     private void setupBreweryLayer(final ArcGISMap map) {
         final PortalItem breweryLayerItem = new PortalItem(mPortalService, getResources().getString(R.string.brewery_layer));
-        FeatureLayer breweryLayer = new FeatureLayer(breweryLayerItem,0);
+        ServiceFeatureTable serviceFeatureTable = new ServiceFeatureTable(breweryLayerItem, 0);
+        FeatureLayer breweryLayer = new FeatureLayer(serviceFeatureTable);
         map.getOperationalLayers().add(breweryLayer);
-        breweryLayer.loadAsync();
     }
 
+    // Connect to the bke trail layer from ArcGIS HUB and add it to the operational layers
     private void setupBikeTrailLayer(final ArcGISMap map) {
         ServiceFeatureTable serviceFeatureTable = new ServiceFeatureTable(getResources().getString(R.string.bike_trail_layer));
         FeatureLayer featureLayer = new FeatureLayer(serviceFeatureTable);
         map.getOperationalLayers().add(featureLayer);
-        featureLayer.loadAsync();
     }
 
     // When the map changes view either pan or zoom perform a new place search with the updated location
