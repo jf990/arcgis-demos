@@ -139,7 +139,7 @@ function getDirections(stops) {
   });
 };
 
-// Perform a geocode if given something to search for on teh command line.
+// Perform a geocode if given something to search for on the command line.
 const commandLineParameter = process.argv.length > 2 ? process.argv[2] : "";
 if (commandLineParameter != "") {
   geocodeFromCommandLine(commandLineParameter);
