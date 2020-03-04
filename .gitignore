@@ -105,3 +105,4 @@ dist
 
 # Android Studio
 .gradle
+.project
