@@ -29,7 +29,7 @@
     "@esri/arcgis-rest-geocoding": "^2.8.1",
     "@esri/arcgis-rest-request": "^2.8.1",
     "@esri/arcgis-rest-routing": "^2.8.1",
-    "cross-fetch": "^3.0.4",
+    "cross-fetch": "^3.1.5",
     "dotenv": "^8.2.0",
     "isomorphic-form-data": "^2.0.0"
   }
